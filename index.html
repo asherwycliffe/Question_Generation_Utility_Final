@@ -70,14 +70,6 @@
       opacity: 0.6;
       pointer-events: none;
     }
-    #downloadBtn {
-      display: block;
-      background-color: #4caf50;
-      margin: 1.5rem auto 0;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 6px;
-    }
   </style>
 </head>
 <body>
@@ -96,12 +88,11 @@
     <textarea id="question" name="question" rows="5" placeholder="Type your question here..." required></textarea>
 
     <button type="submit">Generate</button>
+    <button id="download-button">Download</button>
   </form>
 
   <div id="response" style="display:none;">
     <p id="outputQuestion"></p>
-    <pre id="rawText" style="display:none;"></pre>
-    <button id="downloadBtn" style="display:none;">Download Question</button>
   </div>
 
   <script>
@@ -111,17 +102,8 @@
       const questionInput = document.getElementById("question");
       const responseDiv = document.getElementById("response");
       const outputQuestion = document.getElementById("outputQuestion");
-      const rawText = document.getElementById("rawText");
-      const downloadBtn = document.getElementById("downloadBtn");
 
-      const stripMarkdown = (text) => {
-        return text
-          .replace(/\*\*(.*?)\*\*/g, '$1')
-          .replace(/`{1,3}([\s\S]*?)`{1,3}/g, '$1')
-          .replace(/_(.*?)_/g, '$1')
-          .replace(/^#+\s/gm, '')
-          .replace(/\r\n|\r|\n/g, '\n');
-      };
+      
 
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -130,13 +112,11 @@
         const question = questionInput.value;
 
         outputQuestion.innerHTML = "Thinking...";
-        rawText.innerText = "";
-        downloadBtn.style.display = "none";
         responseDiv.style.display = "block";
         form.classList.add("loading");
 
         try {
-          const res = await fetch("https://asherwycliffee.app.n8n.cloud/webhook/7a5f8124-925e-43a5-bd5c-5dc48193ebd2", {
+          const res = await fetch("https://asherwycliffe3.app.n8n.cloud/webhook/7a5f8124-925e-43a5-bd5c-5dc48193ebd2", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ difficulty, question })
@@ -152,48 +132,37 @@
           }
 
           outputQuestion.innerHTML = `<strong>AI says:</strong><br>${formattedAnswer.replace(/\n/g, "<br>")}`;
-          rawText.innerText = `AI says:\n${stripMarkdown(formattedAnswer)}`;
-          downloadBtn.style.display = "inline-block";
-
         } catch (error) {
           responseDiv.innerHTML = "<p style='color: red;'>Error: " + error.message + "</p>";
         }
 
         form.classList.remove("loading");
       });
-
-      downloadBtn.addEventListener("click", () => {
-        const questionText = rawText.innerText;
-        if (questionText.trim() !== "") {
-          const escapedContent = questionText
-            .split(/\n\s*\n/)
-            .map(paragraph => {
-              const lines = paragraph.split("\n").map(line =>
-                line.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-              );
-              return `<p>${lines.join("<br>")}</p>`;
-            }).join("\n");
-
-          const htmlContent = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office'
-                  xmlns:w='urn:schemas-microsoft-com:office:word'
-                  xmlns='http://www.w3.org/TR/REC-html40'>
-              <head><meta charset='utf-8'><title>Exported Question</title></head>
-              <body><h2>Generated Question & Test Cases</h2>${escapedContent}</body>
-            </html>`;
-
-          const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "question_output.doc";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        }
-      });
     });
+
+	document.getElementById("download-button").addEventListener("click", function () {
+            // Get the text from the <p> tag with the specific ID
+            const pTagId = "outputQuestion"; 
+            const text = document.getElementById(pTagId)?.innerText;
+
+            if (text) {
+                const blob = new Blob([text], { type: "application/msword" });
+
+
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "output.doc"; 
+
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                console.log("File downloaded successfully!");
+            } else {
+                console.error("No <p> tag found with the specified ID.");
+            }
+        });
   </script>
 </body>
 </html>
